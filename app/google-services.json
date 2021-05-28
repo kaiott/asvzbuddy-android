@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "666661692777",
+    "project_id": "asvzfire",
+    "storage_bucket": "asvzfire.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:666661692777:android:0805afa109e47e6a60c9f8",
+        "android_client_info": {
+          "package_name": "li.kaiott.asvzbuddy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "666661692777-u01d87f4edvv4arrcalsnu2o59ldnuf1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4uMLhzqcHqM3o-p6h_HoFLR-E2Jy5D34"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "666661692777-u01d87f4edvv4arrcalsnu2o59ldnuf1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
