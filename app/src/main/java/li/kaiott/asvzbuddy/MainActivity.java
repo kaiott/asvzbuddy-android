@@ -183,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
         getStatus();
     }
     protected void getStatus() {
-        String apiUrl = "http://95.217.133.138/asvzbuddy/status";
+        String apiUrl = "https://www.kaiott.li/asvzbuddy/status";
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         JsonObjectRequest objectRequest = new JsonObjectRequest(
                 Request.Method.GET,
@@ -221,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void getLesson(String id, int purpose) {
-        String apiUrl = "http://95.217.133.138/asvzbuddy/lessons/" + id;
+        String apiUrl = "https://www.kaiott.li/asvzbuddy/lessons/" + id;
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         JsonObjectRequest objectRequest = new JsonObjectRequest(
                 Request.Method.GET,
@@ -259,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
     }
     protected void getLessons() {
         getStatus();
-        String apiUrl = "http://95.217.133.138/asvzbuddy/lessons";
+        String apiUrl = "https://www.kaiott.li/asvzbuddy/lessons";
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         JsonArrayRequest objectRequest = new JsonArrayRequest(
                 Request.Method.GET,
@@ -317,7 +317,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Provide valid id", Toast.LENGTH_SHORT).show();
             return;
         }*/
-        String apiUrl = "http://95.217.133.138/asvzbuddy/lessons/" + id;
+        String apiUrl = "https://www.kaiott.li/asvzbuddy/lessons/" + id;
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         JsonObjectRequest objectRequest = new JsonObjectRequest(
                 Request.Method.PUT,
@@ -355,7 +355,7 @@ public class MainActivity extends AppCompatActivity {
 
     protected void deleteLesson(String id) {
         getStatus();
-        String apiUrl = "http://95.217.133.138/asvzbuddy/lessons/" + id;
+        String apiUrl = "https://www.kaiott.li/asvzbuddy/lessons/" + id;
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         StringRequest stringRequest = new StringRequest(Request.Method.DELETE, apiUrl,
                 new Response.Listener<String>() {
@@ -477,7 +477,7 @@ public class MainActivity extends AppCompatActivity {
         makeRequest(type, 0);
     }
     protected void makeRequest(int type, int id) {
-        String apiUrl = "http://95.217.133.138/asvzbuddy/";
+        String apiUrl = "https://www.kaiott.li/asvzbuddy/";
         int method = Request.Method.GET;
         switch (type) {
             case GET_STATUS:
