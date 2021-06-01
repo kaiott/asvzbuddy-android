@@ -25,42 +25,21 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.ClientError;
-import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.NetworkResponse;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.TimeoutError;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.messaging.FirebaseMessaging;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
-    static final int GET_STATUS = 0, GET_LESSONS = 1, GET_LESSON=2, POST_LESSON = 3, DELETE_LESSON = 4;
-    static final int CHECK_IF_CREATED = 0, CHECK_IF_DUPLICATE = 1;
     static final String TAG = "MainActivity";
-    ArrayList<Lesson> lessons;
-    Boolean serverUp, tokenUpToDate;
     Button postLessonButton;
     ImageView backendStatusImage;
     RecyclerView lessonRecycler;
     SwipeRefreshLayout mRefreshLayout;
-    MenuItem trash;
+    MenuItem trashItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,9 +79,9 @@ public class MainActivity extends AppCompatActivity {
 
         );
 
-        lessons = new ArrayList<>();
-        serverUp = false;
-        tokenUpToDate = false;
+        ServerApi.lessons = new ArrayList<>();
+        ServerApi.serverUp = false;
+        ServerApi.tokenUpToDate = false;
         getLessons();
     }
 
@@ -158,15 +137,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void updateUI() {
-        if (!serverUp) {
+        if (!ServerApi.serverUp) {
             backendStatusImage.setImageResource(R.drawable.ic_baseline_error_24);
-        } else if (tokenUpToDate) {
+        } else if (ServerApi.tokenUpToDate) {
             backendStatusImage.setImageResource(R.drawable.ic_baseline_check_circle_24);
         } else {
             backendStatusImage.setImageResource(R.drawable.ic_baseline_warning_24);
         }
 
-        LessonTileAdapter mAdapter = new LessonTileAdapter(this, lessons);
+        LessonTileAdapter mAdapter = new LessonTileAdapter(this, ServerApi.lessons);
         lessonRecycler.setAdapter(mAdapter);
         lessonRecycler.setLayoutManager(new LinearLayoutManager(this));
 
@@ -175,132 +154,20 @@ public class MainActivity extends AppCompatActivity {
     
     public void updateMenu() {
         Log.i(TAG, "updateMenu: can this be called from our class");
-        Log.i(TAG, "updateMenu: lessons has entries: " + lessons.size());
-        if (trash != null) trash.setVisible(Lesson.selectedCount > 0);
+        Log.i(TAG, "updateMenu: lessons has entries: " + ServerApi.lessons.size());
+        if (trashItem != null) trashItem.setVisible(Lesson.selectedCount > 0);
     }
-    
-    public void getStatus(View view) {
-        getStatus();
-    }
+
     protected void getStatus() {
-        String apiUrl = "http://95.217.133.138/asvzbuddy/status";
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
-        JsonObjectRequest objectRequest = new JsonObjectRequest(
-                Request.Method.GET,
-                apiUrl,
-                null,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Log.i("getStatus:", response.toString());
-                        try {
-                            String serverStatus = response.getString("server_status");
-                            String tokenStatus = response.getString("token_status");
-                            serverUp = serverStatus.equals("running");
-                            tokenUpToDate = tokenStatus.equals("up_to_date");
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            serverUp = false;
-                            tokenUpToDate = false;
-                        }
-                        updateUI();
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e("getStatus:", error.toString());
-                        serverUp = false;
-                        tokenUpToDate = false;
-                        updateUI();
-                        //Handle error, not found, already exists, server down
-                    }
-                }
-        );
-        requestQueue.add(objectRequest);
+        ServerApi.getStatus(this);
     }
 
     protected void getLesson(String id, int purpose) {
-        String apiUrl = "http://95.217.133.138/asvzbuddy/lessons/" + id;
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
-        JsonObjectRequest objectRequest = new JsonObjectRequest(
-                Request.Method.GET,
-                apiUrl,
-                null,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Log.i("getLesson:", response.toString());
-                        if (purpose == CHECK_IF_CREATED) {
-                            Toast.makeText(MainActivity.this, "Lesson " + id + " added successfully", Toast.LENGTH_SHORT).show();
-                        }
-                        else if (purpose == CHECK_IF_DUPLICATE) {
-                            Toast.makeText(MainActivity.this, "Lesson " + id + " already exists", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        if (error instanceof ClientError) {
-                            Toast.makeText(MainActivity.this, "Lesson " + id + " could not be added: Try again", Toast.LENGTH_SHORT).show();
-                        }
-                        else {
-                            Log.e("getLesson:", error.toString());
-                        }
-                    }
-                }
-        );
-        requestQueue.add(objectRequest);
+        ServerApi.getLesson(id, purpose, this);
     }
 
-    public void getLessons(View view) {
-        getLessons();
-    }
     protected void getLessons() {
-        getStatus();
-        String apiUrl = "http://95.217.133.138/asvzbuddy/lessons";
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
-        JsonArrayRequest objectRequest = new JsonArrayRequest(
-                Request.Method.GET,
-                apiUrl,
-                null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        Log.i("getLessons:", response.toString());
-                        lessons = parseLessons(response);
-                        updateUI();
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e("REST Response", error.toString());
-                        //Handle error, not found, already exists, server down
-                    }
-                }
-        );
-        requestQueue.add(objectRequest);
-    }
-
-    protected ArrayList<Lesson> parseLessons(JSONArray jsonArray) {
-        ArrayList<Lesson> result = new ArrayList<>();
-        for (int i = 0; i < jsonArray.length(); i++) {
-            try {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                int id = jsonObject.getInt("lesson_id");
-                int status = jsonObject.getInt("status");
-                String title = jsonObject.getString("title");
-                OffsetDateTime starts = OffsetDateTime.parse(jsonObject.getString("starts"));
-                OffsetDateTime ends = OffsetDateTime.parse(jsonObject.getString("ends"));
-                result.add(new Lesson(id, status, title, starts, ends));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        Log.i("Main", "parseLessons: parsed " + result.size() + " lessons");
-        return result;
+        ServerApi.getLessons(this);
     }
 
     public void postLesson(View view) {
@@ -308,90 +175,15 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
     protected void postLesson(String id) {
-        getStatus();
-        //final String id = postLessonId.getText().toString();
-        /*try {
-            id = Integer.parseInt(postLessonId.getText().toString());
-        } catch (NumberFormatException e) {
-            Log.e("Main", "postLesson: ", e);
-            Toast.makeText(this, "Provide valid id", Toast.LENGTH_SHORT).show();
-            return;
-        }*/
-        String apiUrl = "http://95.217.133.138/asvzbuddy/lessons/" + id;
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
-        JsonObjectRequest objectRequest = new JsonObjectRequest(
-                Request.Method.PUT,
-                apiUrl,
-                null,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Log.i("postLesson:", response.toString());
-                        getLessons();
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        if (error instanceof TimeoutError) {
-                            Log.i("postLesson:", "onErrorResponse: probably posted just fine");
-                            getLesson(id, CHECK_IF_CREATED);
-                        }
-                        else if (error instanceof ClientError) {
-                            Log.i("postLesson:", "onErrorResponse: probably already posted");
-                            getLesson(id, CHECK_IF_DUPLICATE);
-                        }
-                        else {
-                            Log.e("postLesson:", "unidentified error", error);
-                        }
-                    }
-                }
-        );
-        objectRequest.setRetryPolicy(new DefaultRetryPolicy(3000,
-                0,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-        requestQueue.add(objectRequest);
+        ServerApi.postLesson(id, this);
     }
 
     protected void deleteLesson(String id) {
-        getStatus();
-        String apiUrl = "http://95.217.133.138/asvzbuddy/lessons/" + id;
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
-        StringRequest stringRequest = new StringRequest(Request.Method.DELETE, apiUrl,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        if (response.equals("")) {
-                            Log.i("REST Response", "successfully deleted");
-                        }
-                        else {
-                            Log.i("REST Response", response);
-                        }
-                        getLessons();
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("REST Response", error.toString());
-                //Handle error, not found, already exists, server down
-            }
-        }) {
-            @Override
-            protected Response<String> parseNetworkResponse(NetworkResponse response) {
-                Log.i("deleteLesson:", "parseNetworkResponse: " + response.statusCode);
-                if (response.statusCode == 204) {
-                    Log.i("Main", "parseNetworkResponse: Lesson " + id  + " successfully deleted");
-                }
-                else if (response.statusCode == 404) {
-                    Log.i("Main", "parseNetworkResponse: Lesson " + id  + " not found");
-                }
-                return super.parseNetworkResponse(response);
-            }
-        };
-        requestQueue.add(stringRequest);
+        ServerApi.deleteLesson(id, this);
     }
+
     protected void deleteSelected() {
-        for (Lesson lesson : lessons) {
+        for (Lesson lesson : ServerApi.lessons) {
             if (lesson.selected) {
                 deleteLesson(String.valueOf(lesson.getId()));
             }
@@ -432,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams.MATCH_PARENT);
         input.setLayoutParams(lp);
         mBuilder.setTitle("Delete?")
-                .setMessage("Are you sure that you want to delete all " + Lesson.selectedCount + " selected lessons from the server?")
+                .setMessage("Are you sure that you want to delete the " + Lesson.selectedCount + " selected lessons from the server?")
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -447,13 +239,14 @@ public class MainActivity extends AppCompatActivity {
                 });
         return mBuilder.create();
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_menu, menu);
-        trash = menu.findItem(R.id.image_trash);
-        if (trash !=null) trash.setVisible(Lesson.selectedCount > 0);
-        if (trash == null) {
+        trashItem = menu.findItem(R.id.image_trash);
+        if (trashItem !=null) trashItem.setVisible(Lesson.selectedCount > 0);
+        if (trashItem == null) {
             Log.i(TAG, "onCreateOptionsMenu: I dont understand this shiiiit");
         }
         else {
@@ -464,7 +257,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item == trash) {
+        if (item == trashItem) {
             Log.i(TAG, "onOptionsItemSelected: we selected the trash, let's delete stuff");
             AlertDialog dialog = makeDeleteLessonsDialog();
             dialog.show();
@@ -472,53 +265,4 @@ public class MainActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-
-    protected void makeRequest(int type) {
-        makeRequest(type, 0);
-    }
-    protected void makeRequest(int type, int id) {
-        String apiUrl = "http://95.217.133.138/asvzbuddy/";
-        int method = Request.Method.GET;
-        switch (type) {
-            case GET_STATUS:
-                apiUrl += "status";
-                method = Request.Method.GET;
-                break;
-            case GET_LESSONS:
-                apiUrl += "lessons";
-                method = Request.Method.GET;
-                break;
-            case POST_LESSON:
-                apiUrl += "lessons/" + id;
-                method = Request.Method.POST;
-                break;
-            case DELETE_LESSON:
-                apiUrl += "lessons/" + id;
-                method = Request.Method.DELETE;
-                break;
-            default: throw new IllegalArgumentException("Request type not allowed (" + type + ")");
-        }
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
-        JsonArrayRequest objectRequest = new JsonArrayRequest(
-                method,
-                apiUrl,
-                null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        Log.i("REST Response", response.toString());
-                        //Parse response(type, id);
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e("REST Response", error.toString());
-                        //Handle error, not found, already exists, server down
-                    }
-                }
-        );
-        requestQueue.add(objectRequest);
-    }
-
 }
