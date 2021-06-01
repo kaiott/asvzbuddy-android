@@ -27,9 +27,14 @@ import java.util.ArrayList;
 public class ServerApi {
     static final int GET_STATUS = 0, GET_LESSONS = 1, GET_LESSON=2, POST_LESSON = 3, DELETE_LESSON = 4;
     static final int CHECK_IF_CREATED = 0, CHECK_IF_DUPLICATE = 1;
-    ArrayList<Lesson> lessons;
+    static ArrayList<Lesson> lessons;
     static Boolean serverUp, tokenUpToDate;
     static final String APP_URL = "https://www.kaiott.li/asvzbuddy/";
+
+    Context context;
+    public ServerApi(Context context) {
+        this.context = context;
+    }
 
     static void getStatus(Context context) {
         String apiUrl = APP_URL + "status";
@@ -69,7 +74,7 @@ public class ServerApi {
         requestQueue.add(objectRequest);
     }
 
-    protected void getLesson(String id, int purpose, Context context) {
+    static void getLesson(String id, int purpose, Context context) {
         String apiUrl = APP_URL + "lessons/" + id;
         RequestQueue requestQueue = Volley.newRequestQueue(context);
         JsonObjectRequest objectRequest = new JsonObjectRequest(
@@ -103,7 +108,7 @@ public class ServerApi {
         requestQueue.add(objectRequest);
     }
 
-    protected void getLessons(Context context) {
+    static void getLessons(Context context) {
         getStatus(context);
         String apiUrl = APP_URL + "lessons";
         RequestQueue requestQueue = Volley.newRequestQueue(context);
@@ -130,7 +135,7 @@ public class ServerApi {
         requestQueue.add(objectRequest);
     }
 
-    protected ArrayList<Lesson> parseLessons(JSONArray jsonArray) {
+    static ArrayList<Lesson> parseLessons(JSONArray jsonArray) {
         ArrayList<Lesson> result = new ArrayList<>();
         for (int i = 0; i < jsonArray.length(); i++) {
             try {
@@ -149,7 +154,7 @@ public class ServerApi {
         return result;
     }
 
-    protected void postLesson(String id, Context context) {
+    static void postLesson(String id, Context context) {
         getStatus(context);
         //final String id = postLessonId.getText().toString();
         /*try {
@@ -195,7 +200,7 @@ public class ServerApi {
         requestQueue.add(objectRequest);
     }
 
-    protected void deleteLesson(String id, Context context) {
+    static void deleteLesson(String id, Context context) {
         getStatus(context);
         String apiUrl = APP_URL + "lessons/" + id;
         RequestQueue requestQueue = Volley.newRequestQueue(context);
@@ -235,7 +240,7 @@ public class ServerApi {
 
 
 
-    protected void makeRequest(int type, int id, Context context) {
+    static void makeRequest(int type, int id, Context context) {
     String apiUrl = APP_URL;
         int method = Request.Method.GET;
         switch (type) {
