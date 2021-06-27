@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">ASVZ Buddy</string>
+    <string name="app_name">ASVZBuddy</string>
+    <string name="appname">AppName</string>
 </resources>

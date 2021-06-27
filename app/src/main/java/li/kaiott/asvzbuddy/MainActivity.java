@@ -29,6 +29,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.messaging.FirebaseMessaging;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -59,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String action = intent.getAction();
         String type = intent.getType();
-        if (action.equals(Intent.ACTION_SEND) && type != null) {
+        if (action != null && action.equals(Intent.ACTION_SEND) && type != null) {
             if (type.equals("text/plain")) {
                 handleSentText(intent);
             }
@@ -88,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        Toast.makeText(MainActivity.this, "no token yet", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(MainActivity.this, "no token yet", Toast.LENGTH_SHORT).show();
         FirebaseMessaging.getInstance().getToken()
                 .addOnCompleteListener(new OnCompleteListener<String>() {
                     @Override
@@ -104,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
                         // Log and toast
                         String msg = "FCM registration Token: "+ token;
                         Log.d(TAG, msg);
-                        Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -145,7 +146,8 @@ public class MainActivity extends AppCompatActivity {
             backendStatusImage.setImageResource(R.drawable.ic_baseline_warning_24);
         }
 
-        LessonTileAdapter mAdapter = new LessonTileAdapter(this, ServerApi.lessons);
+        ArrayList<Lesson> lessonsToDisplay = Lesson.filterInterval(ServerApi.lessons, OffsetDateTime.now(), null);
+        LessonTileAdapter mAdapter = new LessonTileAdapter(this, lessonsToDisplay);
         lessonRecycler.setAdapter(mAdapter);
         lessonRecycler.setLayoutManager(new LinearLayoutManager(this));
 
@@ -153,7 +155,6 @@ public class MainActivity extends AppCompatActivity {
     }
     
     public void updateMenu() {
-        Log.i(TAG, "updateMenu: can this be called from our class");
         Log.i(TAG, "updateMenu: lessons has entries: " + ServerApi.lessons.size());
         if (trashItem != null) trashItem.setVisible(Lesson.selectedCount > 0);
     }

@@ -1,6 +1,9 @@
 package li.kaiott.asvzbuddy;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 public class Lesson implements Comparable<Lesson>{
     private int id, status;
@@ -49,5 +52,17 @@ public class Lesson implements Comparable<Lesson>{
     @Override
     public int compareTo(Lesson o) {
         return this.starts.compareTo(o.starts);
+    }
+
+    public static ArrayList<Lesson> filterInterval(ArrayList<Lesson> lessons, OffsetDateTime from, OffsetDateTime to) {
+        ArrayList<Lesson> filtered = new ArrayList<>();
+
+        for (Lesson lesson : lessons) {
+            if ((from == null || !lesson.getEnds().isBefore(from)) && (to == null || lesson.getStarts().isBefore(to))) {
+                filtered.add(lesson);
+            }
+        }
+
+        return filtered;
     }
 }

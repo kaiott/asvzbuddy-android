@@ -16,6 +16,7 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.common.util.ArrayUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,6 +24,9 @@ import org.json.JSONObject;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 public class ServerApi {
     static final int GET_STATUS = 0, GET_LESSONS = 1, GET_LESSON=2, POST_LESSON = 3, DELETE_LESSON = 4;
@@ -121,6 +125,7 @@ public class ServerApi {
                     public void onResponse(JSONArray response) {
                         Log.i("getLessons:", response.toString());
                         lessons = parseLessons(response);
+                        Collections.sort(lessons);
                         ((MainActivity) context).updateUI();
                     }
                 },
